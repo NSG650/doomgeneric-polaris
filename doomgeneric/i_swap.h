@@ -20,7 +20,7 @@
 #ifndef __I_SWAP__
 #define __I_SWAP__
 
-#include <SDL2/SDL_endian.h>
+// #include <SDL2/SDL_endian.h>
 
 // Endianess handling.
 // WAD files are stored little endian.
@@ -30,16 +30,14 @@
 // These are deliberately cast to signed values; this is the behaviour
 // of the macros in the original source and some code relies on it.
 
-#define SHORT(x)  ((signed short) SDL_SwapLE16(x))
-#define LONG(x)   ((signed int) SDL_SwapLE32(x))
 
 // Defines for checking the endianness of the system.
 
-#if SDL_BYTEORDER == SYS_LIL_ENDIAN
+/*#if SDL_BYTEORDER == SYS_LIL_ENDIAN
 #define SYS_LITTLE_ENDIAN
 #elif SDL_BYTEORDER == SYS_BIG_ENDIAN
 #define SYS_BIG_ENDIAN
-#endif
+#endif*/
 
 // cosmito from lsdldoom
 #define doom_swap_s(x) \
@@ -47,11 +45,16 @@
                               (((unsigned short int)(x) & 0xff00) >> 8))) 
 
 
-#if ( SDL_BYTEORDER == SDL_BIG_ENDIAN )
-#define doom_wtohs(x) doom_swap_s(x)
-#else
+
+// Running on x86_64 who cares smhhhh
+
+//#if ( SDL_BYTEORDER == SDL_BIG_ENDIAN )
+//#define doom_wtohs(x) doom_swap_s(x)
+//#else
 #define doom_wtohs(x) (short int)(x)
-#endif
+#define SHORT(x)  ((signed short) x)
+#define LONG(x)   ((signed int) x)
+//#endif
 
 #endif
 
