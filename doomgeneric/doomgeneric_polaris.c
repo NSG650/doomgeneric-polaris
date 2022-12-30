@@ -81,7 +81,6 @@ void DG_Init() {
 
 void DG_DrawFrame() {
 	printf("Got frame\n");
-	memset(fb, 0x00, framebuffer_info.pitch * framebuffer_info.height);
 	for (int i = 0; i < DOOMGENERIC_RESY; ++i) {
 		memcpy(fb + i * framebuffer_info.pitch, DG_ScreenBuffer + i * DOOMGENERIC_RESX, DOOMGENERIC_RESX * 4);
 	}
