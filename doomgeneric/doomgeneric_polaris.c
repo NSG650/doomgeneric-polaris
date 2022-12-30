@@ -73,9 +73,10 @@ void DG_Init() {
 		return;
 	}
 
-	fb = malloc(framebuffer_info.pitch * framebuffer_info.height);
+	fb = mmap(0, framebuffer_info.height * framebuffer_info.width * framebuffer_info.bpp / 8, PROT_READ | PROT_WRITE,
+				   MAP_SHARED, framebuffer_fd, 0);
+
 	memset(fb, 0x00, framebuffer_info.pitch * framebuffer_info.height);
-	write(framebuffer_fd, fb, framebuffer_info.pitch * framebuffer_info.height);
 }
 
 void DG_DrawFrame() {
@@ -84,7 +85,6 @@ void DG_DrawFrame() {
 	for (int i = 0; i < DOOMGENERIC_RESY; ++i) {
 		memcpy(fb + i * framebuffer_info.pitch, DG_ScreenBuffer + i * DOOMGENERIC_RESX, DOOMGENERIC_RESX * 4);
 	}
-	write(framebuffer_fd, fb, framebuffer_info.pitch * framebuffer_info.height);
 }
 
 // stubbed for now
