@@ -15,6 +15,75 @@
 #include <time.h>
 #include <errno.h>
 
+#define KEYQUEUE_SIZE 16
+
+static unsigned short s_KeyQueue[KEYQUEUE_SIZE];
+static unsigned int s_KeyQueueWriteIndex = 0;
+static unsigned int s_KeyQueueReadIndex = 0;
+
+static unsigned char convertToDoomKey(unsigned char scancode)
+{
+    unsigned char key = 0;
+
+    switch (scancode)
+    {
+    case 0x9C:
+    case 0x1C:
+        key = KEY_ENTER;
+        break;
+    case 0x01:
+        key = KEY_ESCAPE;
+        break;
+    case 0xCB:
+    case 0x4B:
+        key = KEY_LEFTARROW;
+        break;
+    case 0xCD:
+    case 0x4D:
+        key = KEY_RIGHTARROW;
+        break;
+    case 0xC8:
+    case 0x48:
+        key = KEY_UPARROW;
+        break;
+    case 0xD0:
+    case 0x50:
+        key = KEY_DOWNARROW;
+        break;
+    case 0x1D:
+        key = KEY_FIRE;
+        break;
+    case 0x39:
+        key = KEY_USE;
+        break;
+    case 0x2A:
+    case 0x36:
+        key = KEY_RSHIFT;
+        break;
+    case 0x15:
+        key = 'y';
+        break;
+    default:
+        break;
+    }
+
+    return key;
+}
+
+static void addKeyToQueue(int pressed, unsigned char keyCode)
+{
+	//printf("key hex %x decimal %d\n", keyCode, keyCode);
+
+        unsigned char key = convertToDoomKey(keyCode);
+
+        unsigned short keyData = (pressed << 8) | key;
+
+        s_KeyQueue[s_KeyQueueWriteIndex] = keyData;
+        s_KeyQueueWriteIndex++;
+        s_KeyQueueWriteIndex %= KEYQUEUE_SIZE;
+}
+
+
 void raw_nanosleep(void *a, void *b) {
 	ssize_t ret;
     asm volatile
@@ -90,15 +159,62 @@ void DG_Init() {
 	memset(fb, 0x00, framebuffer_info.pitch * framebuffer_info.height);
 }
 
+static void handleKeyInput()
+{
+    if (keyboard_fd < 0)
+    {
+        return;
+    }
+
+    unsigned char scancode = 0;
+
+    if (ioctl(keyboard_fd, 0x1, &scancode) > 0)
+    {
+        unsigned char keyRelease = (0x80 & scancode);
+
+        scancode = (0x7F & scancode);
+
+        if (0 == keyRelease)
+        {
+            addKeyToQueue(1, scancode);
+        }
+        else
+        {
+            addKeyToQueue(0, scancode);
+        }
+    }
+}
+
 void DG_DrawFrame() {
+	if (framebuffer_fd == -1)
+		return;
+
 	for (int i = 0; i < DOOMGENERIC_RESY; ++i) {
 		memcpy(fb + i * framebuffer_info.pitch, DG_ScreenBuffer + i * DOOMGENERIC_RESX, DOOMGENERIC_RESX * 4);
 	}
+
+	handleKeyInput();
 }
 
 // stubbed for now
 int DG_GetKey(int *pressed, unsigned char *doomKey) {
-	return 0;
+	if (s_KeyQueueReadIndex == s_KeyQueueWriteIndex)
+    {
+        //key queue is empty
+
+        return 0;
+    }
+    else
+    {
+        unsigned short keyData = s_KeyQueue[s_KeyQueueReadIndex];
+        s_KeyQueueReadIndex++;
+        s_KeyQueueReadIndex %= KEYQUEUE_SIZE;
+
+        *pressed = keyData >> 8;
+        *doomKey = keyData & 0xFF;
+
+        return 1;
+    }
 }
 
 uint32_t ticks = 0;
