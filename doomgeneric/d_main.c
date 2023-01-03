@@ -91,7 +91,7 @@ char *          savegamedir;
 
 // location of IWAD and WAD files
 
-char *          iwadfile;
+char * iwadfile;
 
 
 boolean		devparm;	// started game with -devparm
@@ -1362,6 +1362,7 @@ void D_DoomMain (void)
 
     // Find main IWAD file and load it.
     iwadfile = D_FindIWAD(IWAD_MASK_DOOM, &gamemission);
+
 
     // None found?
 

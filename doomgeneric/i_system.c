@@ -271,7 +271,8 @@ void I_Quit (void)
 
 static int ZenityAvailable(void)
 {
-    return system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
+    // return system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
+    return 0;
 }
 
 // Escape special characters in the given string so that they can be

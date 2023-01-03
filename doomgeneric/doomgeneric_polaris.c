@@ -15,6 +15,17 @@
 #include <time.h>
 #include <errno.h>
 
+void raw_nanosleep(void *a, void *b) {
+	ssize_t ret;
+    asm volatile
+    (
+        "syscall"
+        : "=a" (ret)
+        : "0"(0x23), "D"(a), "S"(b)
+        : "rcx", "r11", "memory"
+    );
+}
+
 /* msleep(): Sleep for the requested number of milliseconds. */
 int msleep(long msec)
 {
@@ -30,12 +41,12 @@ int msleep(long msec)
     ts.tv_sec = msec / 1000;
     ts.tv_nsec = (msec % 1000) * 1000000;
 
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
+	raw_nanosleep(&ts, &ts);
+
 
     return res;
 }
+
 
 int framebuffer_fd = -1;
 int keyboard_fd = -1;
@@ -80,7 +91,6 @@ void DG_Init() {
 }
 
 void DG_DrawFrame() {
-	printf("Got frame\n");
 	for (int i = 0; i < DOOMGENERIC_RESY; ++i) {
 		memcpy(fb + i * framebuffer_info.pitch, DG_ScreenBuffer + i * DOOMGENERIC_RESX, DOOMGENERIC_RESX * 4);
 	}
@@ -94,7 +104,6 @@ int DG_GetKey(int *pressed, unsigned char *doomKey) {
 uint32_t ticks = 0;
 
 void DG_SleepMs(uint32_t ms) {
-	printf("Got sleep\n");
 	msleep(ms);
 	ticks += ms;
 }
