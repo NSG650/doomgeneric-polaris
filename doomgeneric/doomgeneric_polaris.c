@@ -168,7 +168,7 @@ static void handleKeyInput()
 
     unsigned char scancode = 0;
 
-    if (ioctl(keyboard_fd, 0x1, &scancode) > 0)
+    if (ioctl(keyboard_fd, 0x1, &scancode) == 0)
     {
         unsigned char keyRelease = (0x80 & scancode);
 
